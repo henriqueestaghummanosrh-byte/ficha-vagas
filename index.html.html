@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Publicação de Vaga</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue-dark:#1F4E79; --blue-mid:#2E75B6; --blue-light:#D6E4F0; --blue-pale:#EBF3FA;
+    --green-dark:#375623; --green-light:#E2EFDA;
+    --orange:#C55A11; --orange-light:#FBE5D6;
+    --purple-dark:#4B2E83; --purple-light:#EDE7F6;
+    --gray-bg:#F8F9FA; --gray-border:#DEE2E6;
+    --white:#FFFFFF; --text:#212529; --text-muted:#6C757D;
+    --radius:6px; --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  }
+  body { font-family:'Inter',system-ui,sans-serif; font-size:14px; background:#F0F4F8; color:var(--text); min-height:100vh; padding:32px 16px 80px; }
+  .page { max-width:860px; margin:0 auto; }
+
+  /* HEADER */
+  .header { background:var(--blue-dark); border-radius:var(--radius) var(--radius) 0 0; padding:28px 32px 24px; text-align:center; }
+  .header h1 { color:#fff; font-size:22px; font-weight:700; letter-spacing:.5px; }
+  .header p  { color:#93C5E8; font-size:13px; margin-top:6px; }
+
+  /* PROGRESS */
+  .progress-wrap { background:var(--white); padding:14px 32px; border-bottom:1px solid var(--gray-border); display:flex; align-items:center; gap:12px; }
+  .progress-bar-outer { flex:1; height:6px; background:var(--blue-light); border-radius:99px; overflow:hidden; }
+  .progress-bar-inner { height:100%; background:var(--blue-mid); border-radius:99px; transition:width .4s ease; width:0%; }
+  .progress-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+
+  /* CARD */
+  .card { background:var(--white); box-shadow:var(--shadow); border-radius:0 0 var(--radius) var(--radius); overflow:hidden; }
+
+  /* SECTION */
+  .section { border-bottom:1px solid var(--gray-border); }
+  .section:last-child { border-bottom:none; }
+  .section-header { padding:14px 32px; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; }
+  .section-header:hover { filter:brightness(.96); }
+  .section-num { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.25); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .section-title { color:#fff; font-weight:600; font-size:15px; }
+  .section-sub   { color:rgba(255,255,255,.75); font-size:12px; margin-top:1px; }
+  .section-chevron { margin-left:auto; color:rgba(255,255,255,.8); font-size:18px; transition:transform .25s; line-height:1; }
+  .section-header.open .section-chevron { transform:rotate(180deg); }
+  .section-body { display:none; }
+  .section-body.open { display:block; padding:20px 32px 28px; }
+
+  .sec-geral    .section-header { background:var(--blue-mid); }
+  .sec-pandape  .section-header { background:var(--blue-mid); }
+  .sec-recrutei .section-header { background:var(--green-dark); }
+  .sec-vendoor  .section-header { background:var(--orange); }
+  .sec-perguntas .section-header { background:var(--purple-dark); }
+  .sec-pub      .section-header { background:var(--blue-dark); }
+
+  /* FIELDS */
+  .field-row { display:grid; grid-template-columns:200px 1fr; border-bottom:1px solid var(--gray-border); }
+  .field-row:last-child { border-bottom:none; }
+  .field-row.two-pair { grid-template-columns:180px 1fr 180px 1fr; }
+  .field-label { background:var(--blue-pale); padding:11px 14px; font-weight:600; font-size:13px; color:var(--blue-dark); display:flex; align-items:center; border-right:1px solid var(--blue-light); }
+  .field-label.accent-green  { background:var(--green-light);  color:var(--green-dark);  border-right-color:#B6D5A0; }
+  .field-label.accent-orange { background:var(--orange-light); color:var(--orange);      border-right-color:#F4B183; }
+  .field-label.accent-purple { background:var(--purple-light); color:var(--purple-dark); border-right-color:#C5B3E6; }
+  .field-value { padding:8px 12px; display:flex; align-items:flex-start; }
+  .field-value.checkboxes { flex-wrap:wrap; gap:6px 20px; padding:10px 14px; align-items:center; }
+  .field-value.tall  { min-height:72px; }
+  .field-value.xtall { min-height:220px; align-items:stretch; }
+
+  input[type="text"], textarea { width:100%; border:none; outline:none; font-family:inherit; font-size:14px; color:var(--text); background:transparent; resize:none; }
+  input[type="text"]::placeholder, textarea::placeholder { color:#AAAAAA; font-style:italic; }
+  textarea { min-height:56px; line-height:1.5; }
+  textarea.autosize { min-height:220px; overflow:hidden; line-height:1.55; white-space:pre-wrap; }
+
+  /* CHECKBOXES */
+  .cb-item { display:flex; align-items:center; gap:7px; cursor:pointer; padding:3px 0; white-space:nowrap; }
+  .cb-item input[type="checkbox"] { display:none; }
+  .cb-box { width:18px; height:18px; border:2px solid var(--gray-border); border-radius:3px; background:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+  .cb-item input:checked + .cb-box { background:var(--blue-mid); border-color:var(--blue-mid); }
+  .cb-box::after { content:''; width:5px; height:9px; border:2px solid transparent; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); }
+  .cb-item input:checked + .cb-box::after { border-color:#fff; }
+  .cb-label { font-size:13px; }
+  .sec-recrutei  .cb-item input:checked + .cb-box { background:var(--green-dark);  border-color:var(--green-dark); }
+  .sec-vendoor   .cb-item input:checked + .cb-box { background:var(--orange);      border-color:var(--orange); }
+  .sec-perguntas .cb-item input:checked + .cb-box { background:var(--purple-dark); border-color:var(--purple-dark); }
+  .sec-pub       .cb-item input:checked + .cb-box { background:var(--blue-dark);   border-color:var(--blue-dark); }
+
+  /* PERGUNTAS ELIMINATÓRIAS */
+  .pergunta-card { border:1px solid var(--gray-border); border-radius:var(--radius); margin-bottom:16px; overflow:hidden; }
+  .pergunta-card:last-child { margin-bottom:0; }
+  .pergunta-titulo { background:var(--purple-light); padding:8px 14px; font-weight:600; font-size:13px; color:var(--purple-dark); border-bottom:1px solid #C5B3E6; }
+  .pergunta-body { padding:0; }
+  .pergunta-row { display:grid; grid-template-columns:180px 1fr; border-bottom:1px solid var(--gray-border); }
+  .pergunta-row:last-child { border-bottom:none; }
+  .pergunta-label { background:var(--purple-light); padding:10px 14px; font-weight:600; font-size:12px; color:var(--purple-dark); display:flex; align-items:center; border-right:1px solid #C5B3E6; }
+  .pergunta-value { padding:8px 12px; display:flex; align-items:center; }
+  .pergunta-value.checkboxes { flex-wrap:wrap; gap:6px 16px; padding:8px 14px; }
+  .eliminatoria-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:99px; font-size:12px; font-weight:600; }
+  .eliminatoria-badge.sim { background:#FFE4E4; color:#C0392B; }
+  .eliminatoria-badge.nao { background:#E4F4E4; color:#27AE60; }
+
+  /* NOTE BAR */
+  .note-bar { margin-top:16px; padding:10px 14px; border-radius:var(--radius); font-size:12.5px; font-style:italic; display:flex; align-items:flex-start; gap:8px; }
+  .note-bar.blue   { background:var(--blue-pale);    color:var(--blue-mid); }
+  .note-bar.green  { background:var(--green-light);  color:var(--green-dark); }
+  .note-bar.orange { background:var(--orange-light); color:var(--orange); }
+
+  /* ACTIONS */
+  .actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; padding:20px 32px; background:var(--gray-bg); border-top:1px solid var(--gray-border); border-radius:0 0 var(--radius) var(--radius); }
+  .btn { padding:10px 18px; border-radius:var(--radius); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border:none; transition:all .15s; white-space:nowrap; }
+  .btn-ghost   { background:transparent; border:1.5px solid var(--gray-border); color:var(--text-muted); }
+  .btn-ghost:hover { background:#eee; }
+  .btn-primary { background:var(--blue-dark); color:#fff; }
+  .btn-primary:hover { background:#193E62; }
+  .btn-green   { background:#25D366; color:#fff; }
+  .btn-green:hover { background:#1ebe5a; }
+  .btn-outline { background:#fff; border:1.5px solid var(--blue-mid); color:var(--blue-mid); }
+  .btn-outline:hover { background:var(--blue-pale); }
+
+  /* MODAL */
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; }
+  .modal-backdrop.show { display:flex; }
+  .modal { background:#fff; border-radius:10px; padding:28px 32px; max-width:520px; width:92%; box-shadow:0 8px 40px rgba(0,0,0,.2); }
+  .modal h2 { font-size:17px; font-weight:700; margin-bottom:6px; }
+  .modal p  { font-size:13px; color:var(--text-muted); margin-bottom:16px; line-height:1.5; }
+  .link-box { background:var(--gray-bg); border:1px solid var(--gray-border); border-radius:var(--radius); padding:12px 14px; font-size:13px; word-break:break-all; margin-bottom:16px; }
+  .link-box a { color:var(--blue-mid); text-decoration:underline; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:6px; vertical-align:middle; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:28px; right:28px; background:#1B4332; color:#fff; padding:13px 18px; border-radius:var(--radius); font-size:14px; font-weight:500; display:none; align-items:center; gap:10px; box-shadow:0 4px 20px rgba(0,0,0,.2); z-index:999; }
+  .toast.show { display:flex; animation:slide-in .25s ease; }
+  @keyframes slide-in { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* ══ PRINT ══════════════════════════════════════════════════════════ */
+  @media print {
+    @page { size:A4; margin:14mm 12mm 14mm 12mm; }
+    * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    body { background:#fff !important; padding:0 !important; font-size:11px !important; }
+    .page { max-width:100% !important; }
+    .progress-wrap, .actions, .modal-backdrop, .toast { display:none !important; }
+    .card { box-shadow:none !important; border-radius:0 !important; }
+    .header { border-radius:0 !important; padding:14px 20px !important; }
+    .header h1 { font-size:16px !important; }
+    .header p  { font-size:11px !important; }
+    .section-body { display:block !important; padding:0 !important; }
+    .section-header { padding:8px 16px !important; cursor:default; }
+    .section-title { font-size:12px !important; }
+    .section-sub   { font-size:10px !important; }
+    .section-chevron { display:none !important; }
+    .section-body.open { padding:0 !important; }
+    .field-row { break-inside:avoid !important; page-break-inside:avoid !important; }
+    .field-label { font-size:11px !important; padding:7px 10px !important; }
+    .field-value { padding:6px 10px !important; font-size:11px !important; }
+    .field-value.tall  { min-height:44px !important; }
+    .field-value.xtall { min-height:0 !important; }
+    input[type="text"], textarea { font-size:11px !important; }
+    textarea.autosize { overflow:visible !important; height:auto !important; min-height:0 !important; }
+    .cb-box { width:14px !important; height:14px !important; border:1.5px solid #999 !important; }
+    .cb-item input:checked + .cb-box { background:#2E75B6 !important; border-color:#2E75B6 !important; }
+    .sec-recrutei  .cb-item input:checked + .cb-box { background:#375623 !important; border-color:#375623 !important; }
+    .sec-vendoor   .cb-item input:checked + .cb-box { background:#C55A11 !important; border-color:#C55A11 !important; }
+    .sec-perguntas .cb-item input:checked + .cb-box { background:#4B2E83 !important; border-color:#4B2E83 !important; }
+    .cb-label { font-size:11px !important; }
+    .cb-item  { gap:5px !important; }
+    .note-bar { margin-top:8px !important; padding:6px 10px !important; font-size:10px !important; }
+    .section-header { break-after:avoid !important; page-break-after:avoid !important; }
+    /* Perguntas eliminatórias no print */
+    .pergunta-card { break-inside:avoid !important; page-break-inside:avoid !important; margin-bottom:8px !important; }
+    .pergunta-titulo { font-size:11px !important; padding:6px 10px !important; }
+    .pergunta-label  { font-size:10px !important; padding:6px 10px !important; }
+    .pergunta-value  { padding:5px 10px !important; font-size:11px !important; }
+    .eliminatoria-badge { font-size:10px !important; padding:2px 7px !important; }
+    .sec-perguntas .section-body.open { padding:12px 16px !important; }
+  }
+
+  @media (max-width:640px) {
+    body { padding:12px 8px 64px; }
+    .section-header, .section-body.open, .actions { padding-left:16px; padding-right:16px; }
+    .field-row, .field-row.two-pair { grid-template-columns:1fr; }
+    .field-label { border-right:none; border-bottom:1px solid var(--blue-light); }
+    .progress-wrap { padding:12px 16px; }
+    .pergunta-row { grid-template-columns:1fr; }
+    .pergunta-label { border-right:none; border-bottom:1px solid #C5B3E6; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>📋 Ficha de Publicação de Vaga</h1>
+    <p>Preencha todos os campos e compartilhe com o estagiário responsável</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 de 0 campos preenchidos</span>
+  </div>
+
+  <div class="card">
+
+    <!-- ① INFORMAÇÕES GERAIS -->
+    <div class="section sec-geral">
+      <div class="section-header open" onclick="toggleSection(this)">
+        <div class="section-num">①</div>
+        <div><div class="section-title">Informações Gerais da Vaga</div><div class="section-sub">Preencha uma vez — vale para todas as plataformas</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body open">
+        <div class="field-row"><div class="field-label">Título da Vaga</div><div class="field-value"><input type="text" placeholder="Ex: Assistente Comercial" data-label="Título da Vaga" data-track></div></div>
+        <div class="field-row"><div class="field-label">Empresa / Cliente</div><div class="field-value"><input type="text" placeholder="Nome da empresa contratante" data-label="Empresa / Cliente" data-track></div></div>
+        <div class="field-row"><div class="field-label">Localização</div><div class="field-value"><input type="text" placeholder="Cidade / Estado" data-label="Localização" data-track></div></div>
+        <div class="field-row"><div class="field-label">Área</div><div class="field-value"><input type="text" placeholder="Ex: Comercial, Administrativo, Saúde…" data-label="Área" data-track></div></div>
+        <div class="field-row"><div class="field-label">Nível Hierárquico</div><div class="field-value"><input type="text" placeholder="Ex: Assistente, Analista, Coordenador…" data-label="Nível Hierárquico" data-track></div></div>
+        <div class="field-row"><div class="field-label">Escolaridade Mínima</div><div class="field-value"><input type="text" placeholder="Ex: Ensino Médio Completo, Superior em Adm…" data-label="Escolaridade Mínima" data-track></div></div>
+        <div class="field-row two-pair">
+          <div class="field-label">Faixa Salarial</div><div class="field-value"><input type="text" placeholder="R$ _____ a R$ _____" data-label="Faixa Salarial" data-track></div>
+          <div class="field-label">Salário Fixo</div><div class="field-value"><input type="text" placeholder="R$ _____________" data-label="Salário Fixo" data-track></div>
+        </div>
+        <div class="field-row two-pair">
+          <div class="field-label">C.H. Semanal</div><div class="field-value"><input type="text" placeholder="_____ horas/semana" data-label="Carga Horária Semanal" data-track></div>
+          <div class="field-label">Ocultar Salário?</div>
+          <div class="field-value checkboxes" data-label="Ocultar Salário">
+            <label class="cb-item"><input type="checkbox" value="Sim"><span class="cb-box"></span><span class="cb-label">Sim</span></label>
+            <label class="cb-item"><input type="checkbox" value="Não"><span class="cb-box"></span><span class="cb-label">Não</span></label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Modelo de Trabalho</div>
+          <div class="field-value checkboxes" data-label="Modelo de Trabalho">
+            <label class="cb-item"><input type="checkbox" value="Presencial"><span class="cb-box"></span><span class="cb-label">Presencial</span></label>
+            <label class="cb-item"><input type="checkbox" value="Home Office"><span class="cb-box"></span><span class="cb-label">Home Office</span></label>
+            <label class="cb-item"><input type="checkbox" value="Híbrido"><span class="cb-box"></span><span class="cb-label">Híbrido</span></label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Tipo de Contrato</div>
+          <div class="field-value checkboxes" data-label="Tipo de Contrato">
+            <label class="cb-item"><input type="checkbox" value="CLT"><span class="cb-box"></span><span class="cb-label">CLT</span></label>
+            <label class="cb-item"><input type="checkbox" value="PJ"><span class="cb-box"></span><span class="cb-label">PJ</span></label>
+            <label class="cb-item"><input type="checkbox" value="Estágio"><span class="cb-box"></span><span class="cb-label">Estágio</span></label>
+            <label class="cb-item"><input type="checkbox" value="Jovem Aprendiz"><span class="cb-box"></span><span class="cb-label">Jovem Aprendiz</span></label>
+            <label class="cb-item"><input type="checkbox" value="Trainee"><span class="cb-box"></span><span class="cb-label">Trainee</span></label>
+            <label class="cb-item"><input type="checkbox" value="Temporário"><span class="cb-box"></span><span class="cb-label">Temporário</span></label>
+            <label class="cb-item"><input type="checkbox" value="Cooperado"><span class="cb-box"></span><span class="cb-label">Cooperado</span></label>
+            <label class="cb-item"><input type="checkbox" value="Autônomo"><span class="cb-box"></span><span class="cb-label">Autônomo</span></label>
+            <label class="cb-item"><input type="checkbox" value="Outro"><span class="cb-box"></span><span class="cb-label">Outro</span></label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Jornada</div>
+          <div class="field-value checkboxes" data-label="Jornada">
+            <label class="cb-item"><input type="checkbox" value="Integral"><span class="cb-box"></span><span class="cb-label">Integral</span></label>
+            <label class="cb-item"><input type="checkbox" value="Noturno"><span class="cb-box"></span><span class="cb-label">Noturno</span></label>
+            <label class="cb-item"><input type="checkbox" value="Parcial Manhã"><span class="cb-box"></span><span class="cb-label">Parcial Manhã</span></label>
+            <label class="cb-item"><input type="checkbox" value="Parcial Tarde"><span class="cb-box"></span><span class="cb-label">Parcial Tarde</span></label>
+            <label class="cb-item"><input type="checkbox" value="Parcial Noite"><span class="cb-box"></span><span class="cb-label">Parcial Noite</span></label>
+          </div>
+        </div>
+        <div class="field-row"><div class="field-label">Benefícios</div><div class="field-value"><input type="text" placeholder="Ex: VT, VR, Plano de Saúde, Odontológico…" data-label="Benefícios" data-track></div></div>
+        <div class="field-row">
+          <div class="field-label">Descrição / Requisitos</div>
+          <div class="field-value xtall"><textarea class="autosize" placeholder="Cole aqui a descrição completa da vaga: remuneração, benefícios, horários, atividades e requisitos…" data-label="Descrição / Requisitos" data-track oninput="autoGrow(this)"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② PANDAPÉ -->
+    <div class="section sec-pandape">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-num">②</div>
+        <div><div class="section-title">Pandapé</div><div class="section-sub">Campos exclusivos desta plataforma</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body">
+        <div class="field-row"><div class="field-label">Especialização</div><div class="field-value"><input type="text" placeholder="Ex: Venda Interna, Recepção, Logística…" data-label="[Pandapé] Especialização" data-track></div></div>
+        <div class="field-row">
+          <div class="field-label">Área (categoria)</div>
+          <div class="field-value checkboxes" data-label="[Pandapé] Área">
+            <label class="cb-item"><input type="checkbox" value="Administração"><span class="cb-box"></span><span class="cb-label">Administração</span></label>
+            <label class="cb-item"><input type="checkbox" value="Saúde"><span class="cb-box"></span><span class="cb-label">Saúde</span></label>
+            <label class="cb-item"><input type="checkbox" value="Comercial"><span class="cb-box"></span><span class="cb-label">Comercial</span></label>
+            <label class="cb-item"><input type="checkbox" value="Tecnologia"><span class="cb-box"></span><span class="cb-label">Tecnologia</span></label>
+            <label class="cb-item"><input type="checkbox" value="Financeiro"><span class="cb-box"></span><span class="cb-label">Financeiro</span></label>
+            <label class="cb-item"><input type="checkbox" value="Outro"><span class="cb-box"></span><span class="cb-label">Outro</span></label>
+          </div>
+        </div>
+        <div class="note-bar blue">ℹ️ Os demais campos do Pandapé (salário, contrato, jornada, modelo, localização, escolaridade) vêm do Bloco ①.</div>
+      </div>
+    </div>
+
+    <!-- ③ RECRUTEI -->
+    <div class="section sec-recrutei">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-num">③</div>
+        <div><div class="section-title">Recrutei</div><div class="section-sub">Campos exclusivos desta plataforma</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field-label accent-green">Departamento</div>
+          <div class="field-value checkboxes" data-label="[Recrutei] Departamento">
+            <label class="cb-item"><input type="checkbox" value="Comercial"><span class="cb-box"></span><span class="cb-label">Comercial</span></label>
+            <label class="cb-item"><input type="checkbox" value="Administrativo"><span class="cb-box"></span><span class="cb-label">Administrativo</span></label>
+            <label class="cb-item"><input type="checkbox" value="Financeiro"><span class="cb-box"></span><span class="cb-label">Financeiro</span></label>
+            <label class="cb-item"><input type="checkbox" value="Operacional"><span class="cb-box"></span><span class="cb-label">Operacional</span></label>
+            <label class="cb-item"><input type="checkbox" value="Marketing"><span class="cb-box"></span><span class="cb-label">Marketing</span></label>
+            <label class="cb-item"><input type="checkbox" value="Recursos Humanos"><span class="cb-box"></span><span class="cb-label">Recursos Humanos</span></label>
+          </div>
+        </div>
+        <div class="note-bar green">ℹ️ Estado/Cidade, Benefícios, Regime de Contratação, Carga Horária e Faixa Salarial vêm do Bloco ①.</div>
+      </div>
+    </div>
+
+    <!-- ④ VENDOOR -->
+    <div class="section sec-vendoor">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-num">④</div>
+        <div><div class="section-title">Vendoor</div><div class="section-sub">Campos exclusivos desta plataforma</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field-label accent-orange">Escala de Trabalho</div>
+          <div class="field-value checkboxes" data-label="[Vendoor] Escala de Trabalho">
+            <label class="cb-item"><input type="checkbox" value="5x2"><span class="cb-box"></span><span class="cb-label">5x2</span></label>
+            <label class="cb-item"><input type="checkbox" value="6x1"><span class="cb-box"></span><span class="cb-label">6x1</span></label>
+            <label class="cb-item"><input type="checkbox" value="12x36"><span class="cb-box"></span><span class="cb-label">12x36</span></label>
+            <label class="cb-item"><input type="checkbox" value="Outra"><span class="cb-box"></span><span class="cb-label">Outra</span></label>
+          </div>
+        </div>
+        <div class="field-row"><div class="field-label accent-orange">Dias de Trabalho</div><div class="field-value"><input type="text" placeholder="Ex: Segunda a Sexta / Segunda a Sábado…" data-label="[Vendoor] Dias de Trabalho" data-track></div></div>
+        <div class="field-row"><div class="field-label accent-orange">Horário</div><div class="field-value"><input type="text" placeholder="Ex: 08h às 18h / 07h às 16h…" data-label="[Vendoor] Horário" data-track></div></div>
+        <div class="field-row">
+          <div class="field-label accent-orange">Tipo de Remuneração</div>
+          <div class="field-value checkboxes" data-label="[Vendoor] Tipo de Remuneração">
+            <label class="cb-item"><input type="checkbox" value="Salário Fixo"><span class="cb-box"></span><span class="cb-label">Salário Fixo</span></label>
+            <label class="cb-item"><input type="checkbox" value="Média Salarial"><span class="cb-box"></span><span class="cb-label">Média Salarial</span></label>
+            <label class="cb-item"><input type="checkbox" value="Salário a Combinar"><span class="cb-box"></span><span class="cb-label">Salário a Combinar</span></label>
+            <label class="cb-item"><input type="checkbox" value="Comissionado"><span class="cb-box"></span><span class="cb-label">Comissionado</span></label>
+          </div>
+        </div>
+        <div class="note-bar orange">ℹ️ Benefícios e valor da remuneração vêm do Bloco ①.</div>
+      </div>
+    </div>
+
+    <!-- ⑤ PERGUNTAS ELIMINATÓRIAS -->
+    <div class="section sec-perguntas">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-num">⑤</div>
+        <div><div class="section-title">Perguntas Eliminatórias</div><div class="section-sub">Até 3 perguntas para triagem de candidatos</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body">
+
+        <!-- Pergunta 1 -->
+        <div class="pergunta-card">
+          <div class="pergunta-titulo">Pergunta 1</div>
+          <div class="pergunta-body">
+            <div class="pergunta-row">
+              <div class="pergunta-label">Pergunta</div>
+              <div class="pergunta-value"><input type="text" placeholder="Ex: Você possui CNH categoria B?" data-label="[P1] Pergunta" data-track></div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">Resposta certa</div>
+              <div class="pergunta-value checkboxes" data-label="[P1] Resposta certa">
+                <label class="cb-item"><input type="checkbox" value="Sim"><span class="cb-box"></span><span class="cb-label">Sim</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não"><span class="cb-box"></span><span class="cb-label">Não</span></label>
+              </div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">É eliminatória?</div>
+              <div class="pergunta-value checkboxes" data-label="[P1] Eliminatória">
+                <label class="cb-item"><input type="checkbox" value="Sim — elimina quem errar"><span class="cb-box"></span><span class="cb-label">✖ Sim — elimina quem errar</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não — apenas informativa"><span class="cb-box"></span><span class="cb-label">✔ Não — apenas informativa</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pergunta 2 -->
+        <div class="pergunta-card">
+          <div class="pergunta-titulo">Pergunta 2</div>
+          <div class="pergunta-body">
+            <div class="pergunta-row">
+              <div class="pergunta-label">Pergunta</div>
+              <div class="pergunta-value"><input type="text" placeholder="Ex: Você tem disponibilidade para trabalhar aos sábados?" data-label="[P2] Pergunta" data-track></div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">Resposta certa</div>
+              <div class="pergunta-value checkboxes" data-label="[P2] Resposta certa">
+                <label class="cb-item"><input type="checkbox" value="Sim"><span class="cb-box"></span><span class="cb-label">Sim</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não"><span class="cb-box"></span><span class="cb-label">Não</span></label>
+              </div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">É eliminatória?</div>
+              <div class="pergunta-value checkboxes" data-label="[P2] Eliminatória">
+                <label class="cb-item"><input type="checkbox" value="Sim — elimina quem errar"><span class="cb-box"></span><span class="cb-label">✖ Sim — elimina quem errar</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não — apenas informativa"><span class="cb-box"></span><span class="cb-label">✔ Não — apenas informativa</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pergunta 3 -->
+        <div class="pergunta-card">
+          <div class="pergunta-titulo">Pergunta 3</div>
+          <div class="pergunta-body">
+            <div class="pergunta-row">
+              <div class="pergunta-label">Pergunta</div>
+              <div class="pergunta-value"><input type="text" placeholder="Ex: Você possui experiência com serviços braçais?" data-label="[P3] Pergunta" data-track></div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">Resposta certa</div>
+              <div class="pergunta-value checkboxes" data-label="[P3] Resposta certa">
+                <label class="cb-item"><input type="checkbox" value="Sim"><span class="cb-box"></span><span class="cb-label">Sim</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não"><span class="cb-box"></span><span class="cb-label">Não</span></label>
+              </div>
+            </div>
+            <div class="pergunta-row">
+              <div class="pergunta-label">É eliminatória?</div>
+              <div class="pergunta-value checkboxes" data-label="[P3] Eliminatória">
+                <label class="cb-item"><input type="checkbox" value="Sim — elimina quem errar"><span class="cb-box"></span><span class="cb-label">✖ Sim — elimina quem errar</span></label>
+                <label class="cb-item"><input type="checkbox" value="Não — apenas informativa"><span class="cb-box"></span><span class="cb-label">✔ Não — apenas informativa</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ⑥ PUBLICAÇÃO & RESPONSÁVEIS -->
+    <div class="section sec-pub">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-num">⑥</div>
+        <div><div class="section-title">Publicação &amp; Responsáveis</div><div class="section-sub">Defina onde publicar e quem é responsável</div></div>
+        <div class="section-chevron">⌄</div>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field-label">Publicar em</div>
+          <div class="field-value checkboxes" data-label="Publicar em">
+            <label class="cb-item"><input type="checkbox" value="Pandapé"><span class="cb-box"></span><span class="cb-label">Pandapé</span></label>
+            <label class="cb-item"><input type="checkbox" value="Recrutei"><span class="cb-box"></span><span class="cb-label">Recrutei</span></label>
+            <label class="cb-item"><input type="checkbox" value="Vendoor"><span class="cb-box"></span><span class="cb-label">Vendoor</span></label>
+          </div>
+        </div>
+        <div class="field-row"><div class="field-label">Consultor Responsável</div><div class="field-value"><input type="text" placeholder="Nome do consultor" data-label="Consultor Responsável" data-track></div></div>
+        <div class="field-row"><div class="field-label">Prazo para Publicação</div><div class="field-value"><input type="text" placeholder="Ex: 28/06/2026" data-label="Prazo para Publicação" data-track></div></div>
+        <div class="field-row"><div class="field-label">Observações</div><div class="field-value tall"><textarea class="autosize" style="min-height:64px" placeholder="Alguma instrução especial para a publicação?" data-label="Observações" data-track oninput="autoGrow(this)"></textarea></div></div>
+      </div>
+    </div>
+
+  </div><!-- /.card -->
+
+  <div class="actions">
+    <button class="btn btn-ghost"   onclick="clearForm()">🗑 Limpar tudo</button>
+    <button class="btn btn-outline" onclick="prepararEImprimir()">🖨 Imprimir / PDF</button>
+    <button class="btn btn-primary" onclick="gerarLink()">🔗 Gerar link</button>
+    <button class="btn btn-green"   onclick="enviarWhatsApp()">💬 Enviar pelo WhatsApp</button>
+  </div>
+
+</div><!-- /.page -->
+
+<!-- MODAL LINK -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="fecharModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>🔗 Link gerado!</h2>
+    <p>Copie o link abaixo e envie para o estagiário. Ao abrir, a ficha já estará preenchida com todos os dados.</p>
+    <div class="link-box" id="linkBox">Gerando…</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost"   onclick="fecharModal()">Fechar</button>
+      <button class="btn btn-green"   onclick="abrirWhatsAppComLink()">💬 WhatsApp</button>
+      <button class="btn btn-primary" onclick="copiarLink()">📋 Copiar link</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE_URL = 'https://henriqueestaghummanosrh-byte.github.io/Ficha-Edit-vel-Publica-o-de-Vagas/';
+
+// ── AUTO-GROW ─────────────────────────────────────────────────────────────────
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight + 2) + 'px';
+}
+document.querySelectorAll('textarea.autosize').forEach(autoGrow);
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('textarea.autosize').forEach(autoGrow);
+});
+function prepararEImprimir() {
+  document.querySelectorAll('.section-body').forEach(b => b.classList.add('open'));
+  document.querySelectorAll('.section-header').forEach(h => h.classList.add('open'));
+  document.querySelectorAll('textarea.autosize').forEach(autoGrow);
+  setTimeout(() => window.print(), 80);
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────────────────
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const open = body.classList.toggle('open');
+  header.classList.toggle('open', open);
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────────
+function updateProgress() {
+  const tracked = document.querySelectorAll('[data-track]');
+  let filled = 0;
+  tracked.forEach(el => { if (el.value && el.value.trim()) filled++; });
+  const pct = tracked.length ? Math.round(filled / tracked.length * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = filled + ' de ' + tracked.length + ' campos de texto preenchidos';
+}
+document.querySelectorAll('[data-track]').forEach(el => el.addEventListener('input', updateProgress));
+updateProgress();
+
+// ── COLLECT DATA ──────────────────────────────────────────────────────────────
+function collectData() {
+  const data = {};
+  document.querySelectorAll('input[type="text"][data-label], textarea[data-label]').forEach(el => {
+    if (el.value.trim()) data[el.dataset.label] = el.value.trim();
+  });
+  document.querySelectorAll('.field-value.checkboxes[data-label], .pergunta-value.checkboxes[data-label]').forEach(group => {
+    const checked = Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    if (checked.length) data[group.dataset.label] = checked.join(', ');
+  });
+  return data;
+}
+
+// ── GERAR LINK ────────────────────────────────────────────────────────────────
+let _shortUrl = null;
+
+async function gerarLink() {
+  const data = collectData();
+  if (!Object.keys(data).length) { showToast('⚠️ Preencha ao menos um campo antes de gerar o link.', '#b45309'); return; }
+  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  const longUrl = BASE_URL + '?d=' + encoded;
+
+  const box = document.getElementById('linkBox');
+  box.innerHTML = '<span class="spinner"></span> Gerando link curto…';
+  _shortUrl = null;
+  document.getElementById('modalBackdrop').classList.add('show');
+
+  try {
+    const res = await fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl));
+    const text = await res.text();
+    _shortUrl = (text && text.startsWith('http')) ? text.trim() : longUrl;
+  } catch(e) {
+    _shortUrl = longUrl;
+  }
+
+  box.innerHTML = '';
+  const a = document.createElement('a');
+  a.href = _shortUrl; a.target = '_blank'; a.rel = 'noopener'; a.textContent = _shortUrl;
+  box.appendChild(a);
+}
+
+function fecharModal(e) {
+  if (!e || e.target === document.getElementById('modalBackdrop'))
+    document.getElementById('modalBackdrop').classList.remove('show');
+}
+
+function copiarLink() {
+  if (!_shortUrl) return;
+  navigator.clipboard.writeText(_shortUrl).then(() => showToast('✅ Link copiado!'));
+}
+
+// ── WHATSAPP ──────────────────────────────────────────────────────────────────
+function buildMsg(url) {
+  const data = collectData();
+  if (!Object.keys(data).length) return null;
+  let msg = '📋 *FICHA DE PUBLICAÇÃO DE VAGA*\n\n';
+  for (const [key, val] of Object.entries(data)) msg += `*${key}:* ${val}\n`;
+  if (url) msg += '\n🔗 ' + url;
+  return msg;
+}
+
+async function enviarWhatsApp() {
+  const data = collectData();
+  if (!Object.keys(data).length) { showToast('⚠️ Preencha ao menos um campo antes de enviar.', '#b45309'); return; }
+  showToast('⏳ Gerando link…', '#2E75B6');
+  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  const longUrl = BASE_URL + '?d=' + encoded;
+  let url = longUrl;
+  try {
+    const res = await fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl));
+    const text = await res.text();
+    if (text && text.startsWith('http')) url = text.trim();
+  } catch(e) {}
+  window.open('https://wa.me/?text=' + encodeURIComponent(buildMsg(url)), '_blank');
+}
+
+function abrirWhatsAppComLink() {
+  if (!_shortUrl) return;
+  const msg = buildMsg(_shortUrl);
+  if (msg) window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// ── LOAD FROM URL ─────────────────────────────────────────────────────────────
+function loadFromURL() {
+  const d = new URLSearchParams(location.search).get('d');
+  if (!d) return;
+  try {
+    const data = JSON.parse(decodeURIComponent(atob(d)));
+    document.querySelectorAll('input[type="text"][data-label], textarea[data-label]').forEach(el => {
+      if (data[el.dataset.label] !== undefined) el.value = data[el.dataset.label];
+    });
+    document.querySelectorAll('.field-value.checkboxes[data-label], .pergunta-value.checkboxes[data-label]').forEach(group => {
+      const val = data[group.dataset.label];
+      if (!val) return;
+      const selected = val.split(', ');
+      group.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = selected.includes(cb.value); });
+    });
+    document.querySelectorAll('.section-body').forEach(b => b.classList.add('open'));
+    document.querySelectorAll('.section-header').forEach(h => h.classList.add('open'));
+    document.querySelectorAll('textarea.autosize').forEach(autoGrow);
+    updateProgress();
+    showToast('✅ Ficha carregada com os dados preenchidos!');
+  } catch(e) { showToast('⚠️ Não foi possível carregar os dados do link.', '#b45309'); }
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────────
+function clearForm() {
+  if (!confirm('Limpar todos os campos? Esta ação não pode ser desfeita.')) return;
+  document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+  history.replaceState(null, '', location.pathname);
+  updateProgress();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = bg || '#1B4332';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+loadFromURL();
+</script>
+</body>
+</html>
